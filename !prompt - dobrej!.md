@@ -1,0 +1,1 @@
+Vypracuj mi tuto státnicovou otázku, dej tam hlavně ty stěžejní věci co zkoušející nejvíce zajíma a udělej to na základě podložených informací -> Strukturovaně, hezky a ne balast textu . Dej mi tam i principy pokud možno:
