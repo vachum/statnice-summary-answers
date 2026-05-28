@@ -263,7 +263,44 @@ function renderMarkdown(md, markdown, env) {
   for (const { placeholder, html: mathHtml } of placeholders) {
     html = html.replaceAll(placeholder, mathHtml);
   }
+  return structureContentHtml(html);
+}
+
+function closeSections(stack, minLevel) {
+  let html = "";
+  while (stack.length && stack.at(-1) >= minLevel) {
+    stack.pop();
+    html += "</section>";
+  }
   return html;
+}
+
+function structureContentHtml(html) {
+  const headingPattern = /<h([2-5])\b[^>]*>[\s\S]*?<\/h\1>/gi;
+  let output = "";
+  let cursor = 0;
+  const stack = [];
+
+  for (const match of html.matchAll(headingPattern)) {
+    const headingHtml = match[0];
+    const level = Number(match[1]);
+    const index = match.index ?? 0;
+
+    output += html.slice(cursor, index);
+    output += closeSections(stack, level);
+
+    const className =
+      level === 2
+        ? "body-section body-section-level-2"
+        : `body-subsection body-section-level-${level}`;
+    output += `<section class="${className}">${headingHtml}`;
+    stack.push(level);
+    cursor = index + headingHtml.length;
+  }
+
+  output += html.slice(cursor);
+  output += closeSections(stack, 0);
+  return output;
 }
 
 async function inlineKatexCss() {
@@ -534,6 +571,27 @@ function cssForSubject(subject) {
       margin-top: 0;
     }
 
+    .body-section {
+      margin: 0 0 7mm;
+    }
+
+    .body-section + .body-section {
+      margin-top: 8mm;
+    }
+
+    .body-subsection {
+      margin: 4.5mm 0 0 4.5mm;
+      padding-left: 4mm;
+      border-left: 2px solid color-mix(in srgb, var(--accent) 24%, #e7edf5);
+    }
+
+    .body-section-level-4,
+    .body-section-level-5 {
+      margin-left: 2.5mm;
+      padding-left: 3mm;
+      border-left-color: #e2e8f0;
+    }
+
     .content h2 {
       margin: 9mm 0 4mm;
       padding-top: 0;
@@ -546,8 +604,8 @@ function cssForSubject(subject) {
     }
 
     .content h3 {
-      margin: 6mm 0 2.4mm;
-      color: #1d2939;
+      margin: 0 0 2.3mm;
+      color: var(--accent-dark);
       font-size: 12.3pt;
       line-height: 1.25;
       letter-spacing: 0;
@@ -556,8 +614,8 @@ function cssForSubject(subject) {
 
     .content h4,
     .content h5 {
-      margin: 4mm 0 1.8mm;
-      color: var(--accent-dark);
+      margin: 0 0 1.8mm;
+      color: #1d2939;
       font-size: 10.4pt;
       line-height: 1.32;
       letter-spacing: 0;
